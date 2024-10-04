@@ -48,6 +48,7 @@ export function syncedConvex<
     // changesSince,
     generateId,
     mode,
+    ...rest
   } = props;
 
   // If using last-sync mode then put it into soft delete mode
@@ -93,7 +94,7 @@ export function syncedConvex<
   const deleteFn = deleteParam ? createMutation(deleteParam) : undefined;
 
   return syncedCrud({
-    // ...rest,
+    ...rest,
     mode: mode || "merge",
     list,
     create,

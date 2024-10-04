@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { syncedConvex } from "@/lib/convex";
 import { observable } from "@legendapp/state";
 import { observer, useObservable } from "@legendapp/state/react";
+import { configureSynced } from "@legendapp/state/sync";
+import { ObservablePersistLocalStorage } from "@legendapp/state/persist-plugins/local-storage";
 import { ConvexClient } from "convex/browser";
 import { FormEvent, useState } from "react";
 import { api } from "../../convex/_generated/api";
@@ -15,13 +17,26 @@ import { useConvex } from "convex/react";
 
 const generateId = () => uuidv4();
 
+const sync = configureSynced(syncedConvex, {
+  persist: {
+    plugin: ObservablePersistLocalStorage,
+    retrySync: true,
+  },
+  onError: (error) => {
+    console.error("Sync error", error);
+  },
+});
+
 // Observable in JS
 const convex = new ConvexClient(import.meta.env.VITE_CONVEX_URL as string);
 const obs$ = observable(() =>
-  syncedConvex({
+  sync({
     convex,
     query: api.messages.list,
     create: api.messages.send,
+    persist: {
+      name: "convexLS1",
+    },
   }),
 );
 
@@ -29,10 +44,13 @@ export const Chat = observer(function Chat({ viewer }: { viewer: string }) {
   const [newMessageText, setNewMessageText] = useState("");
   const convexClient = useConvex();
   const obs2$ = useObservable(() =>
-    syncedConvex({
+    sync({
       convex: convexClient,
       query: api.messages.list,
       create: api.messages.send,
+      persist: {
+        name: "convexLS2",
+      },
     }),
   );
 

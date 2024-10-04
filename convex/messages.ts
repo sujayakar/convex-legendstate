@@ -17,3 +17,12 @@ export const send = mutation({
     await ctx.db.insert("messages", { id, body, author });
   },
 });
+
+// export const update = mutation({
+//   args: { id: v.string(), body: v.string(), author: v.string() },
+//   handler: async (ctx, { id, body, author }) => {
+//     // Update message
+//     // TODO: How to do this with custom id field?
+//     await ctx.db.patch(id, { body, author})
+//   },
+// });

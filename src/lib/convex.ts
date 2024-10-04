@@ -12,7 +12,7 @@ import {
 
 import { ConvexClient } from "convex/browser";
 import { ConvexReactClient } from "convex/react";
-import { type FunctionReference } from "convex/server";
+import type { FunctionArgs, FunctionReference } from "convex/server";
 
 interface SyncedConvexProps<
   Client extends ConvexClient | ConvexReactClient,
@@ -26,9 +26,10 @@ interface SyncedConvexProps<
     > {
   convex: Client;
   query: Query;
-  create?: FunctionReference<"mutation">;
-  update?: FunctionReference<"mutation">;
-  delete?: FunctionReference<"mutation">;
+  queryArgs?: FunctionArgs<Query>;
+  create?: FunctionReference<"mutation", "public", NoInfer<Partial<TRemote>>>;
+  update?: FunctionReference<"mutation", "public", NoInfer<Partial<TRemote>>>;
+  delete?: FunctionReference<"mutation", "public", NoInfer<Partial<TRemote>>>;
 }
 
 export function syncedConvex<
@@ -42,6 +43,7 @@ export function syncedConvex<
   const {
     convex,
     query,
+    queryArgs = {},
     create: createParam,
     update: updateParam,
     delete: deleteParam,
@@ -67,8 +69,7 @@ export function syncedConvex<
         params.update({ value });
       });
     } else {
-      (convex as ConvexClient)?.onUpdate(query, {}, (result) => {
-        console.log("onUpdate result", result, params);
+      (convex as ConvexClient)?.onUpdate(query, queryArgs, (result) => {
         params.update({
           value: result,
         });
@@ -85,7 +86,7 @@ export function syncedConvex<
   const createMutation =
     (mutator: FunctionReference<"mutation">) => async (value: TRemote) => {
       const results = await convex.mutation(mutator, value);
-      console.log("list", results);
+      console.log("mutation", results);
       return results;
     };
 

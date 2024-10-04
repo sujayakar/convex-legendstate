@@ -47,7 +47,9 @@ export const Chat = observer(function Chat({ viewer }: { viewer: string }) {
     sync({
       convex: convexClient,
       query: api.messages.list,
+      queryArgs: {}, // Optional
       create: api.messages.send,
+      update: api.messages.send,
       persist: {
         name: "convexLS2",
       },

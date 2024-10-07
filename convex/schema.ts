@@ -10,5 +10,5 @@ export default defineSchema({
     id: v.string(),
     author: v.string(),
     body: v.string(),
-  }),
+  }).index("id", ["id"]),
 });

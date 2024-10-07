@@ -28,17 +28,17 @@ const sync = configureSynced(syncedConvex, {
 });
 
 // Observable in JS
-const convex = new ConvexClient(import.meta.env.VITE_CONVEX_URL as string);
-const obs$ = observable(() =>
-  sync({
-    convex,
-    query: api.messages.list,
-    create: api.messages.send,
-    persist: {
-      name: "convexLS1",
-    },
-  }),
-);
+// const convex = new ConvexClient(import.meta.env.VITE_CONVEX_URL as string);
+// const obs$ = observable(() =>
+//   sync({
+//     convex,
+//     query: api.messages.list,
+//     create: api.messages.send,
+//     persist: {
+//       name: "convexLS1",
+//     },
+//   }),
+// );
 
 export const Chat = observer(function Chat({ viewer }: { viewer: string }) {
   const [newMessageText, setNewMessageText] = useState("");
@@ -47,32 +47,32 @@ export const Chat = observer(function Chat({ viewer }: { viewer: string }) {
     sync({
       convex: convexClient,
       query: api.messages.list,
-      queryArgs: {}, // Optional
-      create: api.messages.send,
-      update: api.messages.send,
+      create: api.messages.create,      
+      update: api.messages.update,
+      delete: api.messages.remove,
       persist: {
         name: "convexLS2",
       },
     }),
   );
+  (window as any).it = obs2$;
 
-  const messages = Object.values(obs$.get() || {});
-  const messages2 = Object.values(obs2$.get() || {});
-
-  console.log("messages", messages2, messages);
+  const messages = Object.values(obs2$.get() || {});
+  console.log('result', obs2$.get());
+  messages.reverse();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setNewMessageText("");
     const id = generateId();
-    obs$[id].assign({ id, body: newMessageText, author: viewer });
-  };
+    obs2$[id].assign({ id, body: newMessageText, author: viewer });
+  };  
 
   return (
     <>
       <MessageList messages={messages}>
         {messages?.map((message) => (
-          <Message key={message._id} author={message.author} viewer={viewer}>
+          <Message key={message.id} author={message.author} viewer={viewer}>
             {message.body}
           </Message>
         ))}

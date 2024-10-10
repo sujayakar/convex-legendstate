@@ -1,59 +1,68 @@
+import { Doc } from "./_generated/dataModel";
 import { query, mutation, QueryCtx } from "./_generated/server";
-import { ConvexError, v } from "convex/values";
+import { Infer, v } from "convex/values";
+
+const localDocument = v.object({
+  localId: v.string(),
+  localCreatedAt: v.number(),
+  serverCreatedAt: v.optional(v.number()),
+  author: v.string(),
+  body: v.string(),
+});
+type LocalDocument = Infer<typeof localDocument>;
+
+function serverToLocalDocument(server: Doc<"messages">): LocalDocument {
+  const { _id, _creationTime, ...rest } = server;
+  return {
+    serverCreatedAt: _creationTime,
+    ...rest,
+  };
+}
 
 export const list = query({
   args: {},
-  returns: v.array(
-    v.object({
-      localId: v.string(),
-      createdAt: v.number(),
-      author: v.string(),
-      body: v.string(),
-    }),
-  ),
+  returns: v.array(localDocument),
   handler: async (ctx) => {
     // Grab the most recent messages.
     const messages = await ctx.db.query("messages").order("desc").take(100);
-    return messages.map((m) => {
-      // Strip out system provided fields since the client can't generate them.
-      const { _id, _creationTime, ...rest } = m;
-      return rest;
-    });
+    return messages.map(serverToLocalDocument);
   },
 });
 
 export const create = mutation({
   args: {
     localId: v.string(),
-    createdAt: v.number(),
+    localCreatedAt: v.number(),
     body: v.string(),
     author: v.string(),
   },
+  returns: localDocument,
   handler: async (ctx, args) => {
     const existing = await get(ctx, args.localId);
     if (existing) {
       throw new Error(`Document ${args.localId} already exists.`);
     }
     const id = await ctx.db.insert("messages", args);
-    const { _id, _creationTime, ...rest } = (await ctx.db.get(id))!;
-    return rest;
+    const inserted = await ctx.db.get(id)!;
+    return args;
   },
 });
 
 export const update = mutation({
   args: {
     localId: v.string(),
-    createdAt: v.optional(v.number()),
+    localCreatedAt: v.optional(v.number()),
     body: v.optional(v.string()),
     author: v.optional(v.string()),
   },
+  returns: localDocument,
   handler: async (ctx, args) => {
     const existing = await get(ctx, args.localId);
     if (!existing) {
       throw new Error(`Document ${args.localId} does not exist.`);
     }
-    if (args.createdAt) {
-      existing.createdAt = args.createdAt;
+    if (args.localCreatedAt) {
+      existing.localCreatedAt = args.localCreatedAt;
     }
     if (args.body) {
       existing.body = args.body;
@@ -62,21 +71,20 @@ export const update = mutation({
       existing.author = args.author;
     }
     await ctx.db.replace(existing._id, existing);
-    const { _id, _creationTime, ...rest } = existing;
-    return rest;
+    return serverToLocalDocument(existing);
   },
 });
 
 export const remove = mutation({
   args: { localId: v.string() },
+  returns: localDocument,
   handler: async (ctx, args) => {
     const existing = await get(ctx, args.localId);
     if (!existing) {
       throw new Error(`Document ${args.localId} does not exist.`);
     }
     await ctx.db.delete(existing._id);
-    const { _id, _creationTime, ...rest } = existing;
-    return rest;
+    return serverToLocalDocument(existing);
   },
 });
 

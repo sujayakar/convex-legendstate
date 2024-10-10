@@ -95,7 +95,7 @@ export function syncedConvex<
 
   return syncedCrud({
     ...rest,
-    mode: mode || "merge",
+    mode: mode || "set",
     list,
     create: async (input: TRemote) => {
       if (createParam) {

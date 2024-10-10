@@ -8,7 +8,7 @@ import { v } from "convex/values";
 export default defineSchema({
   messages: defineTable({
     localId: v.string(),
-    createdAt: v.number(),
+    localCreatedAt: v.number(),
     author: v.string(),
     body: v.string(),
   }).index("byLocalId", ["localId"]),

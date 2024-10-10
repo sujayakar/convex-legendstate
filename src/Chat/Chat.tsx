@@ -55,14 +55,13 @@ export const Chat = observer(function Chat({ viewer }: { viewer: string }) {
       persist: {
         name: "convexLS2",
       },
-      mode: "assign",
       syncMode: "auto",
     }),
   );
 
   const messages = Object.values(obs$.get() || {});
   const messages2 = Object.values(obs2$.get() || {});
-  messages2.sort((a, b) => b.createdAt - a.createdAt);
+  messages2.sort((a, b) => b.localCreatedAt - a.localCreatedAt);
   console.log("messages", messages, messages2);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -71,7 +70,7 @@ export const Chat = observer(function Chat({ viewer }: { viewer: string }) {
     const localId = generateId();
     obs2$[localId].assign({
       localId,
-      createdAt: Date.now(),
+      localCreatedAt: Date.now(),
       body: newMessageText,
       author: viewer,
     });

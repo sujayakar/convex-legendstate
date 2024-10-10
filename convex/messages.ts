@@ -61,15 +61,7 @@ export const update = mutation({
     if (!existing) {
       throw new Error(`Document ${args.localId} does not exist.`);
     }
-    if (args.localCreatedAt) {
-      existing.localCreatedAt = args.localCreatedAt;
-    }
-    if (args.body) {
-      existing.body = args.body;
-    }
-    if (args.author) {
-      existing.author = args.author;
-    }
+    Object.assign(existing, args);
     await ctx.db.replace(existing._id, existing);
     return serverToLocalDocument(existing);
   },
